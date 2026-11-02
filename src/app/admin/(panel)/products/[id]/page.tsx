@@ -18,6 +18,11 @@ export default async function EditProduct({ params }: { params: Promise<{ id: st
       {p && <input type="hidden" name="id" value={p.id} />}
       <div><label className="label" htmlFor="name">Name</label><input id="name" name="name" required defaultValue={p?.name} className="input" /></div>
       <div><label className="label" htmlFor="description">Description</label><textarea id="description" name="description" rows={4} defaultValue={p?.description} className="input" /></div>
+      <div>
+        <label className="label" htmlFor="comparePrice">Compare-at price ($, optional)</label>
+        <input id="comparePrice" name="comparePrice" type="number" step="0.01" min="0" defaultValue={p?.comparePrice ? (p.comparePrice / 100).toFixed(2) : ""} className="input" />
+        <p className="mt-1 text-xs text-stone-500">If higher than the price, the product shows a Sale badge and the old price struck through.</p>
+      </div>
       <div className="grid grid-cols-2 gap-3">
         <div><label className="label" htmlFor="price">Price ($)</label><input id="price" name="price" type="number" step="0.01" min="0" required defaultValue={p ? (p.price / 100).toFixed(2) : ""} className="input" /></div>
         <div><label className="label" htmlFor="stock">Stock</label><input id="stock" name="stock" type="number" min="0" defaultValue={p?.stock ?? 1} className="input" /></div>

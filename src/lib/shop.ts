@@ -1,6 +1,23 @@
 import { db, products, variants } from "@/db";
 import { inArray } from "drizzle-orm";
 
+export type CardProduct = {
+  id: number; slug: string; name: string; price: number; comparePrice: number | null;
+  images: string[]; stock: number; hasVariants: boolean;
+};
+
+// Product-card data: quick-add only works for products without options.
+export async function toCards(list: (typeof products.$inferSelect)[]): Promise<CardProduct[]> {
+  if (!list.length) return [];
+  const withOpts = new Set(
+    (await db.select({ id: variants.productId }).from(variants).where(inArray(variants.productId, list.map((p) => p.id)))).map((v) => v.id),
+  );
+  return list.map((p) => ({
+    id: p.id, slug: p.slug, name: p.name, price: p.price, comparePrice: p.comparePrice,
+    images: p.images, stock: p.stock, hasVariants: withOpts.has(p.id),
+  }));
+}
+
 export type CartItem = { productId: number; qty: number; options: Record<string, string> };
 export type Line = {
   productId: number; name: string; slug: string; image: string | null; qty: number;

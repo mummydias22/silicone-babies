@@ -10,6 +10,26 @@ import { money } from "@/lib/money";
 type Method = { id: number; name: string; image: string | null; instructions: string };
 type Channel = { id: "email" | "whatsapp" | "sms"; label: string; button: string };
 
+
+// Input with a validation tick that pops in once the value is valid.
+function Field({ id, label, type = "text", area = false, rows = 3, required = true, auto }: { id: string; label: string; type?: string; area?: boolean; rows?: number; required?: boolean; auto?: string }) {
+  const [ok, setOk] = useState(false);
+  const on = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setOk(e.currentTarget.value.trim() !== "" && e.currentTarget.checkValidity());
+  return (
+    <div className="relative">
+      <label className="label" htmlFor={id}>{label}</label>
+      {area
+        ? <textarea id={id} name={id} required={required} rows={rows} className="input pr-10" autoComplete={auto} onChange={on} />
+        : <input id={id} name={id} type={type} required={required} className="input pr-10" autoComplete={auto} onChange={on} />}
+      {ok && (
+        <svg aria-hidden width="20" height="20" viewBox="0 0 20 20" className="pop absolute right-3 top-[2.45rem] text-green-600">
+          <path d="M4 10.5l4 4 8-9" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      )}
+    </div>
+  );
+}
+
 export default function CheckoutForm({ methods, channels }: { methods: Method[]; channels: Channel[] }) {
   const router = useRouter();
   const items = useCart();
@@ -76,11 +96,11 @@ export default function CheckoutForm({ methods, channels }: { methods: Method[];
 
       <section className="card space-y-3">
         <h2 className="font-semibold">Your details</h2>
-        <div><label className="label" htmlFor="name">Full name</label><input id="name" name="name" required className="input" autoComplete="name" /></div>
-        <div><label className="label" htmlFor="email">Email</label><input id="email" name="email" type="email" required className="input" autoComplete="email" /></div>
-        <div><label className="label" htmlFor="phone">Phone</label><input id="phone" name="phone" type="tel" required className="input" autoComplete="tel" /></div>
-        <div><label className="label" htmlFor="address">Delivery address</label><textarea id="address" name="address" required rows={3} className="input" autoComplete="street-address" /></div>
-        <div><label className="label" htmlFor="notes">Notes (optional)</label><textarea id="notes" name="notes" rows={2} className="input" /></div>
+        <Field id="name" label="Full name" auto="name" />
+        <Field id="email" label="Email" type="email" auto="email" />
+        <Field id="phone" label="Phone" type="tel" auto="tel" />
+        <Field id="address" label="Delivery address" area auto="street-address" />
+        <Field id="notes" label="Notes (optional)" area rows={2} required={false} />
       </section>
 
       <fieldset className="card">

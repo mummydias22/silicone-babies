@@ -13,7 +13,7 @@ export default async function Blog() {
         {list.map((p) => {
           const cover = p.cover && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={p.cover} alt="" className={`w-full object-cover ${p.layout === "magazine" ? "absolute inset-0 h-full" : p.layout === "classic" ? "h-24 w-24 shrink-0 rounded-lg" : "aspect-video rounded-xl"}`} />
+            <img src={p.cover} alt="" className={`object-cover ${p.layout === "magazine" ? "absolute inset-0 h-full w-full" : p.layout === "classic" ? "h-24 w-24 shrink-0 rounded-lg" : "aspect-video w-full rounded-xl"}`} />
           );
           if (p.layout === "magazine") {
             return (
@@ -25,7 +25,7 @@ export default async function Blog() {
           return (
             <Link key={p.id} href={`/blog/${p.slug}`} className={`card hover:border-brand ${p.layout === "classic" ? "flex gap-4 sm:col-span-2 lg:col-span-3" : ""}`}>
               {cover}
-              <div className={p.layout === "grid" ? "mt-3" : ""}><h2 className="text-lg font-semibold">{p.title}</h2><p className="mt-1 text-sm text-stone-600">{p.excerpt}</p></div>
+              <div className={`min-w-0 ${p.layout === "grid" ? "mt-3" : "flex-1"}`}><h2 className="text-lg font-semibold">{p.title}</h2><p className="mt-1 text-sm text-stone-600">{p.excerpt}</p></div>
             </Link>
           );
         })}

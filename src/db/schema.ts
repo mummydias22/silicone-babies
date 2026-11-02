@@ -63,6 +63,7 @@ export const products = pgTable("products", {
   slug: text("slug").notNull().unique(),
   description: text("description").notNull().default(""),
   price: integer("price").notNull(), // minor units (cents)
+  comparePrice: integer("compare_price"), // optional "was" price; sale badge shows when > price
   stock: integer("stock").notNull().default(0),
   categoryId: integer("category_id").references(() => categories.id, { onDelete: "set null" }),
   images: text("images").array().notNull().default([]),

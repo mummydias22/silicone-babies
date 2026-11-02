@@ -52,7 +52,8 @@ export async function saveProduct(f: FormData) {
   const prev = id ? (await db.select().from(products).where(eq(products.id, id)))[0] : null;
   const images = [...(prev?.images ?? []).filter((u) => !remove.has(u)), ...(await uploads(f, "images"))];
   const values = {
-    name, description: str(f, "description"), price: cents(str(f, "price")), stock: parseInt(str(f, "stock")) || 0,
+    name, description: str(f, "description"), price: cents(str(f, "price")),
+    comparePrice: cents(str(f, "comparePrice")) || null, stock: parseInt(str(f, "stock")) || 0,
     categoryId: Number(f.get("categoryId")) || null, images, published: on(f, "published"),
   };
   let pid = id;

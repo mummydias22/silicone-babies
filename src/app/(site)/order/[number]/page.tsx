@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { db, orders, orderItems, paymentMethods } from "@/db";
 import { getSettings, money } from "@/lib/settings";
 import { whatsappUrl, smsUrl } from "@/lib/notify";
+import Celebrate from "@/components/motion/Celebrate";
 
 export const metadata = { title: "Order confirmed" };
 
@@ -19,7 +20,8 @@ export default async function Confirmation({ params }: { params: Promise<{ numbe
   // Customer phone and address are deliberately not shown here.
   return (
     <div className="mx-auto max-w-2xl px-4 py-10">
-      <h1 className="text-3xl font-semibold">Thank you!</h1>
+      <Celebrate />
+      <h1 className="rise text-4xl font-semibold">Thank you!</h1>
       <p className="mt-2">Your order <strong>{o.number}</strong> was received. We&apos;ll reply with payment details.</p>
       <div className="card mt-6">
         <ul className="space-y-1 text-sm">
