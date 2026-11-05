@@ -1,13 +1,14 @@
 import { notFound } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { db, products, variants, categories } from "@/db";
+import { categoryTree } from "@/lib/categories";
 import FormSwitch from "@/components/FormSwitch";
 import { saveProduct } from "../../../actions";
 
 export default async function EditProduct({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const isNew = id === "new";
-  const cats = await db.select().from(categories);
+  const cats = categoryTree(await db.select().from(categories));
   const [p] = isNew ? [] : await db.select().from(products).where(eq(products.id, Number(id)));
   if (!isNew && !p) notFound();
   const vs = p ? await db.select().from(variants).where(eq(variants.productId, p.id)) : [];
@@ -31,7 +32,7 @@ export default async function EditProduct({ params }: { params: Promise<{ id: st
         <label className="label" htmlFor="categoryId">Category</label>
         <select id="categoryId" name="categoryId" defaultValue={p?.categoryId ?? ""} className="input">
           <option value="">None</option>
-          {cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          {cats.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
         </select>
       </div>
       <div>

@@ -3,6 +3,7 @@ import { desc, eq } from "drizzle-orm";
 import { db, products, categories, testimonials, posts } from "@/db";
 import { getSettings, money } from "@/lib/settings";
 import { toCards } from "@/lib/shop";
+import { categoryIds } from "@/lib/categories";
 import ProductCard from "./ProductCard";
 import HeroSlider, { type Slide } from "@/components/motion/HeroSlider";
 import Marquee from "@/components/motion/Marquee";
@@ -37,8 +38,11 @@ export default async function Home() {
       }))
     : [{ img: null, eyebrow: s.storeName, title: s.tagline, sub: "Hand-finished silicone babies with soft skin and a weighted, cuddly feel.", href: "/shop", cta: "Shop babies" }];
 
-  const ticker = [s.banner, "Hand-finished silicone babies", "Order by email, WhatsApp or text", "No payment on the site: we reply with payment details", ...cats.map((c) => c.name)].filter(Boolean);
-  const tileImg = (id: number) => latest.find((p) => p.categoryId === id && p.images[0])?.images[0] ?? null;
+  const ticker = [s.banner, "Hand-finished silicone babies", "Order by email, WhatsApp or text", "No payment on the site: we reply with payment details", ...cats.filter((c) => !c.parentId).map((c) => c.name)].filter(Boolean);
+  const tileImg = (id: number) => {
+    const ids = categoryIds(cats, cats.find((c) => c.id === id)!);
+    return latest.find((p) => p.categoryId !== null && ids.includes(p.categoryId) && p.images[0])?.images[0] ?? null;
+  };
   const bannerImg = latest.find((p) => p.images[1])?.images[1] ?? null;
 
   return (
@@ -50,7 +54,7 @@ export default async function Home() {
         <div className="reveal"><p className="eyebrow">Browse</p><h2 className="mt-1 text-3xl font-semibold sm:text-4xl">Shop by category</h2></div>
         {/* reveal sits on the row, not each tile: tiles scrolled off to the side must never be stuck invisible */}
         <div className="snap-row reveal mt-6 pb-2">
-          {cats.map((c) => (
+          {cats.filter((c) => !c.parentId).map((c) => (
             <Link key={c.id} href={`/shop?category=${c.slug}`} className="block">
               <Tilt className="aspect-[4/5] overflow-hidden rounded-3xl bg-gradient-to-br from-soft to-blush">
                 {tileImg(c.id) && (

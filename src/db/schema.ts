@@ -1,4 +1,4 @@
-import { pgTable, text, integer, boolean, timestamp, jsonb, serial } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, boolean, timestamp, jsonb, serial, type AnyPgColumn } from "drizzle-orm/pg-core";
 
 // --- BetterAuth tables ---
 export const user = pgTable("user", {
@@ -55,6 +55,8 @@ export const categories = pgTable("categories", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   slug: text("slug").notNull().unique(),
+  // one level of subcategories; deleting a parent deletes its children (products become uncategorized)
+  parentId: integer("parent_id").references((): AnyPgColumn => categories.id, { onDelete: "cascade" }),
 });
 
 export const products = pgTable("products", {

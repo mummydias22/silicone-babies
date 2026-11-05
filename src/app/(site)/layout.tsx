@@ -42,7 +42,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
           <div><p className="font-serif text-2xl text-brand-dark">{s.storeName}</p><p className="mt-2 text-stone-600">{s.tagline}</p></div>
           <div className="space-y-1">
             <p className="font-medium">Shop</p>
-            {cats.map((c) => <Link key={c.id} href={`/shop?category=${c.slug}`} className="block py-1 hover:text-brand">{c.name}</Link>)}
+            {cats.filter((c) => !c.parentId).map((c) => <Link key={c.id} href={`/shop?category=${c.slug}`} className="block py-1 hover:text-brand">{c.name}</Link>)}
           </div>
           <div className="space-y-1">
             <p className="font-medium">Contact</p>

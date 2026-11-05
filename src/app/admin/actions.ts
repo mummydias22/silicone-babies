@@ -79,7 +79,16 @@ export async function deleteProduct(f: FormData) {
 export async function addCategory(f: FormData) {
   await requireAdmin();
   const name = str(f, "name");
-  if (name) await db.insert(categories).values({ name, slug: slugify(name) }).onConflictDoNothing();
+  const parentId = Number(f.get("parentId")) || null;
+  if (!name) return;
+  let slug = slugify(name);
+  if (parentId) {
+    const [parent] = await db.select().from(categories).where(eq(categories.id, parentId));
+    // only one level deep: a subcategory can't be a parent
+    if (!parent || parent.parentId) return;
+    slug = `${parent.slug}-${slug}`; // "Boy" under two parents must not collide
+  }
+  await db.insert(categories).values({ name, slug, parentId }).onConflictDoNothing();
   revalidatePath("/", "layout");
 }
 export async function deleteCategory(f: FormData) {
