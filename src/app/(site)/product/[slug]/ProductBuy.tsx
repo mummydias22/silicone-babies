@@ -5,12 +5,13 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { addToCart } from "@/lib/cart-client";
 import { flyToCart } from "@/lib/fly";
-import { money } from "@/lib/money";
+import { useMoney } from "@/components/Currency";
 
 type V = { id: number; option: string; value: string; priceDelta: number; stock: number };
 type P = { id: number; name: string; description: string; price: number; comparePrice: number | null; stock: number; images: string[] };
 
 export default function ProductBuy({ p, variants }: { p: P; variants: V[] }) {
+  const money = useMoney();
   const router = useRouter();
   const [idx, setIdx] = useState(0);
   const [zoom, setZoom] = useState<{ i: number; x: number; y: number } | null>(null);

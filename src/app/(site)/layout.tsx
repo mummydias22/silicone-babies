@@ -7,6 +7,7 @@ import Petals from "@/components/motion/Petals";
 import ScrollChrome from "@/components/motion/ScrollChrome";
 import RevealObserver from "@/components/motion/RevealObserver";
 import Wave from "@/components/motion/Wave";
+import { CurrencyProvider } from "@/components/Currency";
 import { db, categories } from "@/db";
 
 const LINKS = [
@@ -17,7 +18,7 @@ const LINKS = [
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
   const [s, cats] = await Promise.all([getSettings(), db.select().from(categories).orderBy(categories.id)]);
   return (
-    <>
+    <CurrencyProvider currency={s.currency}>
       <ScrollChrome />
       <RevealObserver />
       {s.banner && <div className="bg-brand px-4 py-2 text-center text-sm text-white">{s.banner}</div>}
@@ -59,6 +60,6 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         </a>
       )}
       {s.liveChatEnabled && s.liveChat && <LiveChat html={s.liveChat} />}
-    </>
+    </CurrencyProvider>
   );
 }

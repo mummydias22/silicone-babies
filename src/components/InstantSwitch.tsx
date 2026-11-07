@@ -1,14 +1,13 @@
 "use client";
 import { useState } from "react";
-import { togglePayment } from "../../actions";
 
-// Instant-save switch: optimistic update, rolled back if the save fails.
-export default function InstantSwitch({ id, enabled, label }: { id: number; enabled: boolean; label: string }) {
+// Instant-save switch: optimistic update, rolled back if the save fails. `save` is a server action.
+export default function InstantSwitch({ id, enabled, label, save }: { id: number; enabled: boolean; label: string; save: (id: number, enabled: boolean) => Promise<void> }) {
   const [on, setOn] = useState(enabled);
   async function flip() {
     const next = !on;
     setOn(next);
-    try { await togglePayment(id, next); } catch { setOn(!next); }
+    try { await save(id, next); } catch { setOn(!next); }
   }
   return (
     <button type="button" role="switch" aria-checked={on} aria-label={`${label} enabled`} onClick={flip}

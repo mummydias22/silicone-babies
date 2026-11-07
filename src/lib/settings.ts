@@ -4,6 +4,7 @@ import { sql } from "drizzle-orm";
 // Adding a setting = adding one key here.
 export const DEFAULTS = {
   storeName: "Silicone Babies",
+  currency: "USD",
   tagline: "Lifelike silicone babies, made with love",
   banner: "",
   phone: "",

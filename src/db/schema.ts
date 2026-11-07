@@ -100,9 +100,19 @@ export const orders = pgTable("orders", {
   address: text("address").notNull(),
   notes: text("notes").notNull().default(""),
   paymentMethod: text("payment_method").notNull(),
-  channel: text("channel").notNull(),
+  channel: text("channel").notNull(), // email | whatsapp | sms | custom:<order_channels.id>
   total: integer("total").notNull(),
+  currency: text("currency").notNull().default("USD"), // the store currency when the order was placed
   createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Extra ways to send an order, added by the admin (Telegram, Messenger, Instagram...).
+// link may contain {text}, replaced by the URL-encoded order text.
+export const orderChannels = pgTable("order_channels", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  link: text("link").notNull(),
+  enabled: boolean("enabled").notNull().default(true),
 });
 
 export const orderItems = pgTable("order_items", {

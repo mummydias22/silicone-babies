@@ -3,10 +3,11 @@ import Link from "next/link";
 import { useRef } from "react";
 import { addToCart } from "@/lib/cart-client";
 import { flyToCart } from "@/lib/fly";
-import { money } from "@/lib/money";
+import { useMoney } from "@/components/Currency";
 import type { CardProduct } from "@/lib/shop";
 
 export default function ProductCard({ p }: { p: CardProduct }) {
+  const money = useMoney();
   const img = useRef<HTMLImageElement>(null);
   const sold = p.stock <= 0;
   const sale = p.comparePrice !== null && p.comparePrice > p.price;

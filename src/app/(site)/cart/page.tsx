@@ -4,12 +4,13 @@ import { useEffect, useState } from "react";
 import { readCart, writeCart, useCart } from "@/lib/cart-client";
 import { getCart } from "../actions";
 import type { Line } from "@/lib/shop";
-import { money } from "@/lib/money";
+import { useMoney } from "@/components/Currency";
 import CountUp from "@/components/motion/CountUp";
 
 const key = (l: { productId: number; options: Record<string, string> }) => `${l.productId}:${JSON.stringify(l.options)}`;
 
 export default function Cart() {
+  const money = useMoney();
   const items = useCart();
   const [lines, setLines] = useState<Line[] | null>(null);
   const [leaving, setLeaving] = useState<string | null>(null);

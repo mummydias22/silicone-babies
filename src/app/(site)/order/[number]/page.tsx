@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
 import { eq } from "drizzle-orm";
-import { db, orders, orderItems, paymentMethods } from "@/db";
+import { db, orders, orderItems, orderChannels, paymentMethods } from "@/db";
 import { getSettings, money } from "@/lib/settings";
 import { whatsappUrl, smsUrl } from "@/lib/notify";
+import { customUrl } from "@/lib/channels";
+import CopyText from "./CopyText";
 import Celebrate from "@/components/motion/Celebrate";
 
 export const metadata = { title: "Order confirmed" };
@@ -11,12 +13,15 @@ export default async function Confirmation({ params }: { params: Promise<{ numbe
   const { number } = await params;
   const [o] = await db.select().from(orders).where(eq(orders.number, number));
   if (!o) notFound();
+  const custom = o.channel.startsWith("custom:")
+    ? (await db.select().from(orderChannels).where(eq(orderChannels.id, Number(o.channel.slice(7)))))[0]
+    : undefined;
   const [items, [pm], s] = await Promise.all([
     db.select().from(orderItems).where(eq(orderItems.orderId, o.id)),
     db.select().from(paymentMethods).where(eq(paymentMethods.name, o.paymentMethod)),
     getSettings(),
   ]);
-  const text = [`Order ${o.number}`, ...items.map((i) => `${i.qty} x ${i.name}${i.options ? ` (${i.options})` : ""}`), `Total: ${money(o.total)}`, `Payment: ${o.paymentMethod}`].join("\n");
+  const text = [`Order ${o.number}`, ...items.map((i) => `${i.qty} x ${i.name}${i.options ? ` (${i.options})` : ""}`), `Total: ${money(o.total, o.currency)}`, `Payment: ${o.paymentMethod}`].join("\n");
   // Customer phone and address are deliberately not shown here.
   return (
     <div className="mx-auto max-w-2xl px-4 py-10">
@@ -27,11 +32,11 @@ export default async function Confirmation({ params }: { params: Promise<{ numbe
         <ul className="space-y-1 text-sm">
           {items.map((i) => (
             <li key={i.id} className="flex justify-between gap-4">
-              <span>{i.qty} × {i.name}{i.options && ` (${i.options})`}</span><span>{money(i.unitPrice * i.qty)}</span>
+              <span>{i.qty} × {i.name}{i.options && ` (${i.options})`}</span><span>{money(i.unitPrice * i.qty, o.currency)}</span>
             </li>
           ))}
         </ul>
-        <p className="mt-3 text-right font-semibold">Total {money(o.total)}</p>
+        <p className="mt-3 text-right font-semibold">Total {money(o.total, o.currency)}</p>
       </div>
       {pm?.instructions && (
         <div className="card mt-4"><p className="font-semibold">{pm.name}</p><p className="mt-1 whitespace-pre-line text-sm">{pm.instructions}</p></div>
@@ -41,6 +46,8 @@ export default async function Confirmation({ params }: { params: Promise<{ numbe
           <a className="btn" href={whatsappUrl(s.whatsappNumber, text)} target="_blank" rel="noreferrer">Send on WhatsApp</a>
         )}
         {o.channel === "sms" && s.smsNumber && <a className="btn" href={smsUrl(s.smsNumber, text)}>Send text message</a>}
+        {custom && <a className="btn" href={customUrl(custom.link, text)} target="_blank" rel="noreferrer">Send on {custom.name}</a>}
+        {custom && <CopyText text={text} />}
       </div>
     </div>
   );

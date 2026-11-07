@@ -5,10 +5,10 @@ import { useEffect, useState } from "react";
 import { readCart, writeCart, useCart } from "@/lib/cart-client";
 import { getCart, placeOrder } from "../actions";
 import type { Line } from "@/lib/shop";
-import { money } from "@/lib/money";
+import { useMoney } from "@/components/Currency";
 
 type Method = { id: number; name: string; image: string | null; instructions: string };
-type Channel = { id: "email" | "whatsapp" | "sms"; label: string; button: string };
+type Channel = { id: string; label: string; button: string };
 
 
 // Input with a validation tick that pops in once the value is valid.
@@ -31,6 +31,7 @@ function Field({ id, label, type = "text", area = false, rows = 3, required = tr
 }
 
 export default function CheckoutForm({ methods, channels }: { methods: Method[]; channels: Channel[] }) {
+  const money = useMoney();
   const router = useRouter();
   const items = useCart();
   const [lines, setLines] = useState<Line[] | null>(null);
@@ -56,14 +57,15 @@ export default function CheckoutForm({ methods, channels }: { methods: Method[];
     const f = new FormData(e.currentTarget);
     setBusy(true); setError("");
     // Open the tab synchronously in the click handler so popup blockers allow it.
-    const tab = channel === "whatsapp" ? window.open("", "_blank") : null;
+    const tab = channel === "whatsapp" || channel.startsWith("custom:") ? window.open("", "_blank") : null;
     const r = await placeOrder({
       items: readCart(), name: String(f.get("name")), email: String(f.get("email")), phone: String(f.get("phone")),
       address: String(f.get("address")), notes: String(f.get("notes") || ""), paymentMethodId: method, channel,
     });
     if (!r.ok) { tab?.close(); setError(r.error); setBusy(false); return; }
     writeCart([]);
-    if (channel === "whatsapp" && r.handoff && tab) tab.location.href = r.handoff;
+    if (tab && r.handoff) tab.location.href = r.handoff;
+    else tab?.close();
     router.push(`/order/${r.number}`);
     if (channel === "sms" && r.handoff) {
       // open the messaging app after the router navigation so a protocol-handler abort can't cancel it

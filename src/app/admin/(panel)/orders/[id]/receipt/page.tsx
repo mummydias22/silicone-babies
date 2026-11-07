@@ -16,8 +16,8 @@ export default async function Receipt({ params }: { params: Promise<{ id: string
       <p className="mt-4"><b>{o.customerName}</b><br />{o.customerEmail} · {o.customerPhone}<br /><span className="whitespace-pre-line">{o.address}</span></p>
       <table className="mt-4 w-full">
         <tbody>
-          {items.map((i) => <tr key={i.id} className="border-t"><td className="py-1">{i.qty} × {i.name}{i.options && ` (${i.options})`}</td><td className="py-1 text-right">{money(i.unitPrice * i.qty)}</td></tr>)}
-          <tr className="border-t font-semibold"><td className="py-1">Total</td><td className="py-1 text-right">{money(o.total)}</td></tr>
+          {items.map((i) => <tr key={i.id} className="border-t"><td className="py-1">{i.qty} × {i.name}{i.options && ` (${i.options})`}</td><td className="py-1 text-right">{money(i.unitPrice * i.qty, o.currency)}</td></tr>)}
+          <tr className="border-t font-semibold"><td className="py-1">Total</td><td className="py-1 text-right">{money(o.total, o.currency)}</td></tr>
         </tbody>
       </table>
       <p className="mt-3">Payment method: {o.paymentMethod} · Status: {o.status}</p>

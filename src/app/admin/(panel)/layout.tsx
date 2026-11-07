@@ -5,7 +5,7 @@ import { logout } from "../actions";
 
 const LINKS = [
   { href: "/admin", label: "Orders" }, { href: "/admin/products", label: "Products" },
-  { href: "/admin/categories", label: "Categories" }, { href: "/admin/payments", label: "Payment methods" },
+  { href: "/admin/categories", label: "Categories" }, { href: "/admin/payments", label: "Payment methods" }, { href: "/admin/channels", label: "Order channels" },
   { href: "/admin/faqs", label: "FAQs" }, { href: "/admin/testimonials", label: "Testimonials" },
   { href: "/admin/blog", label: "Blog" }, { href: "/admin/settings", label: "Settings" }, { href: "/admin/account", label: "Account" },
 ];

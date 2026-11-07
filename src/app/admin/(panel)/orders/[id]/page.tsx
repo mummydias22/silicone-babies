@@ -22,8 +22,8 @@ export default async function AdminOrder({ params }: { params: Promise<{ id: str
         <p>Payment: {o.paymentMethod} · Sent by: {o.channel}</p>
       </div>
       <div className="card mt-4 text-sm">
-        {items.map((i) => <p key={i.id} className="flex justify-between"><span>{i.qty} × {i.name}{i.options && ` (${i.options})`}</span><span>{money(i.unitPrice * i.qty)}</span></p>)}
-        <p className="mt-2 text-right font-semibold">Total {money(o.total)}</p>
+        {items.map((i) => <p key={i.id} className="flex justify-between"><span>{i.qty} × {i.name}{i.options && ` (${i.options})`}</span><span>{money(i.unitPrice * i.qty, o.currency)}</span></p>)}
+        <p className="mt-2 text-right font-semibold">Total {money(o.total, o.currency)}</p>
       </div>
       <form action={setOrderStatus} className="mt-4 flex gap-2">
         <input type="hidden" name="id" value={o.id} />

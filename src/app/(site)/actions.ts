@@ -5,6 +5,7 @@ import { randomBytes } from "crypto";
 import { getSettings, money } from "@/lib/settings";
 import { priceCart, type CartItem } from "@/lib/shop";
 import { discord, sendMail, whatsappUrl, smsUrl } from "@/lib/notify";
+import { enabledChannels, customUrl } from "@/lib/channels";
 
 export async function getCart(items: CartItem[]) {
   return priceCart(items);
@@ -12,21 +13,21 @@ export async function getCart(items: CartItem[]) {
 
 export type CheckoutInput = {
   items: CartItem[]; name: string; email: string; phone: string; address: string; notes: string;
-  paymentMethodId: number; channel: "email" | "whatsapp" | "sms";
+  paymentMethodId: number; channel: string; // email | whatsapp | sms | custom:<id>
 };
 
-function orderText(num: string, name: string, lines: { name: string; optionsText: string; qty: number; unitPrice: number }[], total: number, method: string) {
+function orderText(num: string, name: string, lines: { name: string; optionsText: string; qty: number; unitPrice: number }[], total: number, method: string, cur: string) {
   return [
     `New order ${num}`, `Customer: ${name}`, "",
-    ...lines.map((l) => `${l.qty} x ${l.name}${l.optionsText ? ` (${l.optionsText})` : ""} - ${money(l.unitPrice * l.qty)}`),
-    "", `Total: ${money(total)}`, `Payment: ${method}`,
+    ...lines.map((l) => `${l.qty} x ${l.name}${l.optionsText ? ` (${l.optionsText})` : ""} - ${money(l.unitPrice * l.qty, cur)}`),
+    "", `Total: ${money(total, cur)}`, `Payment: ${method}`,
   ].join("\n");
 }
 
 export async function placeOrder(input: CheckoutInput): Promise<{ ok: true; number: string; handoff?: string } | { ok: false; error: string }> {
   const s = await getSettings();
-  const enabled = { email: s.orderByEmail, whatsapp: s.orderByWhatsapp && !!s.whatsappNumber, sms: s.orderBySms && !!s.smsNumber };
-  if (!enabled[input.channel]) return { ok: false, error: "That ordering channel isn't available." };
+  const channel = (await enabledChannels(s)).find((c) => c.id === input.channel);
+  if (!channel) return { ok: false, error: "That ordering channel isn't available." };
   const name = input.name.trim(), email = input.email.trim(), phone = input.phone.trim(), address = input.address.trim();
   if (!name || !phone || !address || !/^\S+@\S+\.\S+$/.test(email)) return { ok: false, error: "Please fill in your name, email, phone and address." };
 
@@ -43,7 +44,7 @@ export async function placeOrder(input: CheckoutInput): Promise<{ ok: true; numb
   // ponytail: neon-http has no transactions; sequential writes, a crash mid-way can leave a partial order.
   const [o] = await db.insert(orders).values({
     number, customerName: name, customerEmail: email, customerPhone: phone, address, notes: input.notes.trim(),
-    paymentMethod: pm.name, channel: input.channel, total,
+    paymentMethod: pm.name, channel: input.channel, total, currency: s.currency,
   }).returning();
   await db.insert(orderItems).values(lines.map((l) => ({
     orderId: o.id, productId: l.productId, name: l.name, options: l.optionsText, unitPrice: l.unitPrice, qty: l.qty,
@@ -55,13 +56,14 @@ export async function placeOrder(input: CheckoutInput): Promise<{ ok: true; numb
         .where(and(eq(variants.productId, l.productId), eq(variants.option, option), eq(variants.value, value)));
   }
 
-  const text = orderText(number, name, lines, total, pm.name);
+  const text = orderText(number, name, lines, total, pm.name, s.currency);
   const full = `${text}\nPhone: ${phone}\nEmail: ${email}\nAddress: ${address}${input.notes ? `\nNotes: ${input.notes}` : ""}`;
   await discord(s, full);
   for (const to of s.notifyEmails.split(/[,\s]+/).filter(Boolean)) await sendMail(s, to, `New order ${number}`, full);
   if (input.channel === "email") await sendMail(s, email, `Your order ${number}`, `${text}\n\n${pm.instructions}\n\nWe'll be in touch with payment details.`);
 
   const handoff = input.channel === "whatsapp" ? whatsappUrl(s.whatsappNumber, text)
-    : input.channel === "sms" ? smsUrl(s.smsNumber, text) : undefined;
+    : input.channel === "sms" ? smsUrl(s.smsNumber, text)
+    : channel.link ? customUrl(channel.link, text) : undefined;
   return { ok: true, number, handoff };
 }

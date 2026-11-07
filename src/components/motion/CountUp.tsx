@@ -1,9 +1,10 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { money } from "@/lib/money";
+import { useMoney } from "@/components/Currency";
 
 // Animated money total. Instant under reduced motion.
 export default function CountUp({ cents }: { cents: number }) {
+  const money = useMoney();
   const [shown, setShown] = useState(cents);
   const from = useRef(cents);
   useEffect(() => {

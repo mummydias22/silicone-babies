@@ -4,11 +4,12 @@ import { redirect } from "next/navigation";
 import { and, eq } from "drizzle-orm";
 import { hashPassword, verifyPassword } from "better-auth/crypto";
 import {
-  db, products, variants, categories, paymentMethods, orders, faqs, testimonials, posts, account, user,
+  db, products, variants, categories, paymentMethods, orderChannels, orders, faqs, testimonials, posts, account, user,
 } from "@/db";
 import { auth } from "@/lib/auth";
 import { requireAdmin } from "@/lib/admin";
 import { DEFAULTS, saveSettings, getSettings, type Settings } from "@/lib/settings";
+import { isCurrency } from "@/lib/currencies";
 import { uploadImage } from "@/lib/storage";
 import { sendMailStrict } from "@/lib/notify";
 
@@ -109,6 +110,14 @@ export async function togglePayment(id: number, enabled: boolean) {
   await db.update(paymentMethods).set({ enabled }).where(eq(paymentMethods.id, id));
   revalidatePath("/", "layout");
 }
+export async function updatePayment(f: FormData) {
+  await requireAdmin();
+  const [image] = await uploads(f, "image");
+  await db.update(paymentMethods)
+    .set({ name: str(f, "name"), instructions: str(f, "instructions"), ...(image ? { image } : {}) })
+    .where(eq(paymentMethods.id, Number(f.get("id"))));
+  revalidatePath("/", "layout");
+}
 export async function deletePayment(f: FormData) {
   await requireAdmin();
   await db.delete(paymentMethods).where(eq(paymentMethods.id, Number(f.get("id"))));
@@ -178,6 +187,7 @@ export async function saveSettingsAction(_: { saved: number }, f: FormData) {
   }
   // Keep the stored SMTP password when the field is left blank.
   if (!next.smtpPass) delete next.smtpPass;
+  if (!isCurrency(String(next.currency))) delete next.currency; // ignore anything not in the list
   await saveSettings(next as Partial<Settings>);
   revalidatePath("/", "layout");
   return { saved: Date.now() };
@@ -220,4 +230,31 @@ export async function changePassword(_: string, f: FormData) {
   if (next.length < 8) return "New password must be at least 8 characters.";
   await db.update(account).set({ password: await hashPassword(next) }).where(eq(account.id, acc.id));
   return "Password updated.";
+}
+
+// ---- order channels (extra ways to send an order) ----
+export async function addChannel(f: FormData) {
+  await requireAdmin();
+  const name = str(f, "name"), link = str(f, "link");
+  // only web links and app deep links; never javascript: or data: URLs
+  if (!name || !/^(https?:\/\/|[a-z][a-z0-9+.-]*:\/\/)/i.test(link) || /^(javascript|data|vbscript):/i.test(link)) return;
+  await db.insert(orderChannels).values({ name, link, enabled: on(f, "enabled") });
+  revalidatePath("/", "layout");
+}
+export async function updateChannel(f: FormData) {
+  await requireAdmin();
+  const name = str(f, "name"), link = str(f, "link");
+  if (!name || !/^(https?:\/\/|[a-z][a-z0-9+.-]*:\/\/)/i.test(link) || /^(javascript|data|vbscript):/i.test(link)) return;
+  await db.update(orderChannels).set({ name, link }).where(eq(orderChannels.id, Number(f.get("id"))));
+  revalidatePath("/", "layout");
+}
+export async function toggleChannel(id: number, enabled: boolean) {
+  await requireAdmin();
+  await db.update(orderChannels).set({ enabled }).where(eq(orderChannels.id, id));
+  revalidatePath("/", "layout");
+}
+export async function deleteChannel(f: FormData) {
+  await requireAdmin();
+  await db.delete(orderChannels).where(eq(orderChannels.id, Number(f.get("id"))));
+  revalidatePath("/", "layout");
 }

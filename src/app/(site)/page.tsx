@@ -33,7 +33,7 @@ export default async function Home() {
   const slides: Slide[] = withPhoto.length
     ? withPhoto.map((p, k) => ({
         img: p.images[0], eyebrow: k === 0 ? s.storeName : "New arrival", title: k === 0 ? s.tagline : p.name,
-        sub: k === 0 ? "Hand-finished silicone babies with soft skin and a weighted, cuddly feel." : `From ${money(p.price)}`,
+        sub: k === 0 ? "Hand-finished silicone babies with soft skin and a weighted, cuddly feel." : `From ${money(p.price, s.currency)}`,
         href: `/product/${p.slug}`, cta: k === 0 ? `Meet ${p.name.split(",")[0]}` : "View baby",
       }))
     : [{ img: null, eyebrow: s.storeName, title: s.tagline, sub: "Hand-finished silicone babies with soft skin and a weighted, cuddly feel.", href: "/shop", cta: "Shop babies" }];

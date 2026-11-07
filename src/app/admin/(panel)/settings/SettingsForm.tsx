@@ -3,6 +3,7 @@ import { useActionState } from "react";
 import FormSwitch from "@/components/FormSwitch";
 import PhoneField from "@/components/PhoneField";
 import type { Settings } from "@/lib/settings";
+import { CURRENCIES } from "@/lib/currencies";
 import { saveSettingsAction, testDiscord, testEmail } from "../../actions";
 import TestButton from "./TestButton";
 
@@ -19,6 +20,13 @@ export default function SettingsForm({ s }: { s: Settings }) {
     <form action={action} className="max-w-2xl space-y-5 pb-24">
       <Section title="Store">
         <Text s={s} k="storeName" label="Store name" />
+        <div>
+          <label className="label" htmlFor="currency">Store currency</label>
+          <select id="currency" name="currency" defaultValue={s.currency} className="input">
+            {CURRENCIES.map(([code, name]) => <option key={code} value={code}>{code} — {name}</option>)}
+          </select>
+          <p className="mt-1 text-xs text-stone-500">Shown on every price. Changing it does not convert existing prices; update your product prices after switching. Past orders keep the currency they were placed in.</p>
+        </div>
         <Text s={s} k="tagline" label="Tagline" />
         <Text s={s} k="banner" label="Announcement banner (blank to hide)" />
         <Text s={s} k="phone" label="Phone" type="tel" />
